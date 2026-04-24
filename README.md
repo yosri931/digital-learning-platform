@@ -105,9 +105,12 @@ This project demonstrates real-world SaaS architecture including:
 
 
 
+### 🔐 Login Page
+![Login](./images/login.png)
 
+### 📚 Courses Page
+![Courses](./images/home.png)
 
-[Login](./login/login.PNG)
-[Courses](./mycourses/courses.png)
-[Dashboard](./dashbord.png/dashboard.png)
-[Sitting](./sitting/dashboard.png)
+### 🎥 Lesson View
+![Lessons](./images/dashboard.png)
+
