@@ -1,219 +1,169 @@
-import { useState, useEffect } from "react";
-import { BookOpen, Home, Settings, LogOut, BarChart3 } from "lucide-react";
-import api from "../api/axios";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+} from "recharts";
+
+const stats = [
+  { title: "Courses", value: "2", icon: "📚" },
+  { title: "Enrolled", value: "2", icon: "🎓" },
+  { title: "Progress", value: "0%", icon: "📊" },
+];
+
+const data = [
+  { name: "Completed", value: 30 },
+  { name: "Remaining", value: 70 },
+];
+
+const COLORS = ["#3b82f6", "#374151"]; // dark-friendly
 
 export default function Dashboard() {
-  const [active, setActive] = useState("home");
-  const [courses, setCourses] = useState([]);
-  const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [notif] = useState(false);
 
-  const menu = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "courses", label: "My Courses", icon: BookOpen },
-    { id: "progress", label: "Progress", icon: BarChart3 },
-    { id: "settings", label: "Settings", icon: Settings },
-  ];
-
-  // =========================
-  // GET COURSES
-  // =========================
-  const getCourses = async () => {
-    try {
-      const res = await api.get("/enrollments/my_courses/");
-      setCourses(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  useEffect(() => {
-    if (active === "courses") {
-      getCourses();
-    }
-  }, [active]);
-
-  // =========================
-  // CREATE COURSE
-  // =========================
-  const createCourse = async () => {
-    try {
-      const res = await api.post("/courses/", {
-        title: "New Course",
-        description: "Test course",
-        price: 100,
-        is_published: false,
-      });
-
-      console.log(res.data);
-      getCourses();
-    } catch (err) {
-      console.log(err.response?.data || err.message);
-    }
-  };
-
-  // =========================
-  // LOGOUT
-  // =========================
-  const logout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    window.location.href = "/";
-  };
+  const progress = Math.round(
+    (data[0].value / (data[0].value + data[1].value)) * 100
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="space-y-8">
 
-      {/* ================= SIDEBAR ================= */}
-      <aside className="w-64 bg-white border-r shadow-sm flex flex-col">
+      {/* HEADER */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+          Dashboard
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">
+          Welcome back 👋 Manage your learning progress
+        </p>
+      </div>
 
-        <div className="p-6 text-xl font-bold text-blue-600">
-          LearnHub SaaS
+      {/* NOTIFICATION */}
+      {notif && (
+        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 p-3 rounded-xl">
+          🔔 New update available!
         </div>
+      )}
 
-        <nav className="flex-1 px-3 space-y-2">
-          {menu.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActive(item.id);
-                  setSelectedCourseId(null); // مهم جدًا يمنع loop
-                }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-sm transition
-                ${active === item.id ? "bg-blue-600 text-white" : "hover:bg-gray-100"}`}
-              >
-                <Icon size={18} />
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
+      {/* STATS */}
+      <div className="grid md:grid-cols-3 gap-6">
 
-        <div className="p-4 border-t">
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 text-red-500 text-sm"
+        {stats.map((s, i) => (
+          <motion.div
+            key={s.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-white dark:bg-[#111827] border border-gray-100 dark:border-gray-700 rounded-2xl p-6
+            shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
           >
-            <LogOut size={16} /> Logout
-          </button>
-        </div>
 
-      </aside>
+            <div className="text-2xl">{s.icon}</div>
 
-      {/* ================= MAIN ================= */}
-      <main className="flex-1 p-6">
-
-        {/* TOP */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Welcome back 👋</h1>
-          <p className="text-gray-500 text-sm">
-            Keep learning and track your progress
-          </p>
-        </div>
-
-        {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-
-          <div className="bg-white p-4 rounded-xl shadow-sm">
-            <p className="text-gray-500 text-sm">Enrolled Courses</p>
-            <h2 className="text-2xl font-bold">{courses.length}</h2>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow-sm">
-            <p className="text-gray-500 text-sm">Completed</p>
-            <h2 className="text-2xl font-bold">1</h2>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl shadow-sm">
-            <p className="text-gray-500 text-sm">Progress</p>
-            <h2 className="text-2xl font-bold">42%</h2>
-          </div>
-
-        </div>
-
-        {/* CONTENT */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-
-          {/* HOME */}
-          {active === "home" && (
-            <p className="text-gray-500">
-              Select a course to start learning
+            <p className="text-gray-500 dark:text-gray-400 mt-2">
+              {s.title}
             </p>
-          )}
 
-          {/* COURSES */}
-          {active === "courses" && (
-            <div>
+            <h3 className="text-2xl font-bold mt-1 text-gray-800 dark:text-white">
+              {s.value}
+            </h3>
 
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold">My Courses</h2>
+          </motion.div>
+        ))}
 
-                <button
-                  onClick={createCourse}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  ➕ Create Course
-                </button>
-              </div>
+      </div>
 
-              {courses.length === 0 ? (
-                <p className="text-gray-500">No enrolled courses</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* 📊 PROGRESS (UPDATED) */}
+      <div className="bg-white dark:bg-[#111827] border border-gray-100 dark:border-gray-700 rounded-2xl p-6 shadow-sm">
 
-                  {courses.map((course) => (
-                    <div
-                      key={course.id}
-                      className="border rounded-xl p-4 shadow-sm hover:shadow-md transition"
-                    >
-                      <h3 className="font-bold text-lg">
-                        {course.course_title}
-                      </h3>
+        <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+          📊 Progress Overview
+        </h2>
 
-                      <p className="text-gray-500 text-sm mt-2">
-                        {course.course_detail?.description}
-                      </p>
+        <div className="h-[260px] relative flex items-center justify-center">
 
-                      <div className="mt-3 text-sm text-gray-600">
-                        💰 {course.course_price} EGP
-                      </div>
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="value"
+                innerRadius={65}
+                outerRadius={90}
+                paddingAngle={4}
+                stroke="none"
+              >
+                {data.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
 
-                      <button
-                        onClick={() => {
-                          setSelectedCourseId(course.id);
-                          setActive("home"); // انتقال بسيط بدون render loop
-                        }}
-                        className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg text-sm"
-                      >
-                        Continue Learning
-                      </button>
-                    </div>
-                  ))}
-
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* PROGRESS */}
-          {active === "progress" && (
-            <div>
-              <h2 className="text-lg font-bold mb-4">Progress Overview</h2>
-              <p className="text-gray-500">Charts coming next step</p>
-            </div>
-          )}
-
-          {/* SETTINGS */}
-          {active === "settings" && (
-            <div>
-              <h2 className="text-lg font-bold mb-4">Settings</h2>
-              <p className="text-gray-500">Profile settings here</p>
-            </div>
-          )}
+          {/* Center Text */}
+          <div className="absolute text-center">
+            <p className="text-3xl font-bold text-gray-800 dark:text-white">
+              {progress}%
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Completed
+            </p>
+          </div>
 
         </div>
-      </main>
+
+      </div>
+
+      {/* 📚 COURSES */}
+      <div>
+
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+          Your Courses
+        </h2>
+
+        <div className="grid md:grid-cols-2 gap-6">
+
+          {["HTML", "JavaScript"].map((course, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.03 }}
+              className="bg-white dark:bg-[#111827] border border-gray-100 dark:border-gray-700 rounded-2xl p-5
+              shadow-sm hover:shadow-xl transition-all duration-300"
+            >
+
+              <h3 className="font-semibold text-gray-800 dark:text-white">
+                {course}
+              </h3>
+
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                Learn {course} from beginner to advanced level
+              </p>
+
+              <button className="mt-4 text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                Continue →
+              </button>
+
+            </motion.div>
+          ))}
+
+        </div>
+
+      </div>
+
+      {/* 🎯 PLAYER */}
+      <div className="bg-white dark:bg-[#111827] border border-gray-100 dark:border-gray-700 rounded-2xl p-6 shadow-sm">
+
+        <h2 className="text-lg font-semibold mb-3 text-gray-800 dark:text-white">
+          🎯 Course Player
+        </h2>
+
+        <div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400">
+          Video Player UI (Ready for upgrade)
+        </div>
+
+      </div>
+
     </div>
   );
 }

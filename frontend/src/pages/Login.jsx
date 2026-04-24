@@ -1,74 +1,107 @@
 import { useState } from "react";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    console.log("SEND DATA:", {
+      username,
+      password,
+    });
+
     try {
-      // ✅ تم تصحيح المسار (بدون /api/ هنا)
-      const res = await api.post("/token/", {
-        username,
-        password,
+      const res = await api.post("/api/token/", {
+        username: username.trim(),
+        password: password.trim(),
       });
+
+      console.log("SUCCESS:", res.data);
 
       localStorage.setItem("access", res.data.access);
       localStorage.setItem("refresh", res.data.refresh);
 
-      // الأفضل بدل reload كامل
-      window.location.href = "/dashboard";
-
+      navigate("/dashboard");
     } catch (err) {
-      console.log(err.response?.data || err);
-      alert("Login failed");
+      console.log("ERROR:", err.response?.data);
+      alert(err.response?.data?.detail || "Invalid credentials");
     }
   };
 
   return (
-    <div className="h-screen w-full flex items-center justify-center bg-gray-100">
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h2 style={styles.title}>Welcome Back 👋</h2>
+        <p style={styles.subtitle}>Login to your account</p>
 
-      {/* BOX */}
-      <div className="w-[380px] bg-white rounded-2xl shadow-xl p-8">
-
-        {/* TITLE */}
-        <h1 className="text-3xl font-bold text-center text-blue-600 mb-1">
-          LearnHub
-        </h1>
-
-        <p className="text-center text-gray-500 text-sm mb-6">
-          Welcome back 👋
-        </p>
-
-        {/* USERNAME */}
         <input
           type="text"
           placeholder="Username"
+          style={styles.input}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full mb-4 px-4 py-3 rounded-xl border border-gray-200
-          focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
         />
 
-        {/* PASSWORD */}
         <input
           type="password"
           placeholder="Password"
+          style={styles.input}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full mb-6 px-4 py-3 rounded-xl border border-gray-200
-          focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
         />
 
-        {/* BUTTON */}
-        <button
-          onClick={handleLogin}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition"
-        >
-          Login
-        </button>
-
+        <button type="button" style={styles.button} onClick={handleLogin}>
+  Login
+</button>
       </div>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "linear-gradient(135deg, #667eea, #764ba2)",
+  },
+  card: {
+    background: "#fff",
+    padding: "40px",
+    borderRadius: "16px",
+    width: "320px",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+    textAlign: "center",
+  },
+  title: {
+    marginBottom: "10px",
+  },
+  subtitle: {
+    marginBottom: "20px",
+    color: "#666",
+  },
+  input: {
+    width: "100%",
+    padding: "12px",
+    marginBottom: "15px",
+    borderRadius: "8px",
+    border: "1px solid #ddd",
+    outline: "none",
+  },
+  button: {
+    width: "100%",
+    padding: "12px",
+    border: "none",
+    borderRadius: "8px",
+    background: "#667eea",
+    color: "#fff",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+};

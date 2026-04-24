@@ -1,32 +1,41 @@
 import axios from "axios";
 
+// =========================
+// AXIOS INSTANCE
+// =========================
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/",
+  baseURL: "http://127.0.0.1:8000",
 });
 
 // =========================
-// REQUEST
+// REQUEST INTERCEPTOR
 // =========================
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access");
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("access");
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-
-  return config;
-});
+);
 
 // =========================
-// RESPONSE (IMPORTANT FIX)
+// RESPONSE INTERCEPTOR
 // =========================
 api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    // ❌ DON'T AUTO LOGOUT (THIS WAS YOUR BUG)
-    console.log("API Error:", err.response?.status);
+  (response) => response,
+  (error) => {
+    console.log("API Error:", error.response?.status);
+    console.log("API Error Data:", error.response?.data);
 
-    return Promise.reject(err);
+    // مهم: لا تقم بعمل logout تلقائي (كما كان يحدث في بعض المشاريع)
+    return Promise.reject(error);
   }
 );
 

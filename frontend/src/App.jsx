@@ -18,7 +18,7 @@ function App() {
   return (
     <Routes>
 
-      {/* 🔐 Login */}
+      {/* Login */}
       <Route
         path="/"
         element={
@@ -26,7 +26,14 @@ function App() {
         }
       />
 
-      {/* 🔒 Protected Layout */}
+      <Route
+        path="/login"
+        element={
+          token ? <Navigate to="/dashboard" replace /> : <Login />
+        }
+      />
+
+      {/* Protected Routes */}
       <Route
         element={
           <ProtectedRoute>
